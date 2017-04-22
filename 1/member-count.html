@@ -1,0 +1,100 @@
+<html>
+<head>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+
+<script>
+AWS.config.update({
+  region: "eu-west-1",
+  endpoint: 'https://dynamodb.eu-west-1.amazonaws.com',
+
+  /////////////////////////////
+  // SETUP AWS AUTHENTICATION
+  /////////////////////////////
+
+  accessKeyId: "",
+  secretAccessKey: ""
+});
+
+var docClient = new AWS.DynamoDB.DocumentClient();
+
+function scanData() {
+    document.getElementById('textarea').innerHTML += "Scanning member table." + "\n";
+
+    var params = {
+        TableName: "loyalty-service-member-production",
+        FilterExpression: "namespace = :namespace and #dt between :start_date and :end_date",
+        ExpressionAttributeNames: {
+            "#dt": "date",
+        },
+        ////////////////////
+        // SEARCH CRITERIA
+        ////////////////////
+
+        ExpressionAttributeValues: {
+            ":namespace": "namespace1",
+            ":start_date": "2017-03-31T00:00:00",
+            ":end_date": "2017-03-31T23:59:59"
+        }
+    };
+
+    document.getElementById('textarea').innerHTML += ">>> Scanning for criteria:" + "\n";
+    document.getElementById('textarea').innerHTML += JSON.stringify(params.ExpressionAttributeValues, undefined, 2) + "\n\n";
+
+
+    var count = 0;
+    docClient.scan(params, onScan);
+
+    function onScan(err, data) {
+        if (err) {
+            document.getElementById('textarea').innerHTML += "ERROR: Unable to scan the table: " + "\n" + JSON.stringify(err, undefined, 2);
+
+        } else {
+            document.getElementById('textarea').innerHTML += "\t>>> Scan succeeded. " + "\n";
+
+            count = count + data.Count;
+
+            // Continue scanning if we have more members (per scan 1MB limitation)
+            if (data.LastEvaluatedKey) {
+              document.getElementById('textarea').innerHTML += ">>> Scanning for more..." + "\n";
+              params.ExclusiveStartKey = data.LastEvaluatedKey;
+              docClient.scan(params, onScan);
+
+            // Display result
+            } else {
+
+              document.getElementById('count').innerHTML += "Number of members: " + count + "\n";
+            }         
+        }
+    }
+}
+
+</script>
+</head>
+
+<body>
+<textarea readonly  style="width:800px; height:300px">
+HTML file to be viewed locally in a browser
+
+   PURPOSE: queries loyalty-service dynamoDB member table to find the number of created members within a particular period of time
+
+   USAGE:  
+           a) setup the AWS authentication in the file (accessKeyId and secretAccessKey)
+           b) adjust the dynamodb table name if required (needs to correspond to the relevant AWS account):
+                   TableName: "loyalty-service-member-production"
+                   TableName: "loyalty-service-member-development"
+
+           c) Adjust the search criteria in the file
+           d) save the file
+           e) view in a browser using file:/// schema URL, eg file:///home/tamara/projects/loyalty/loyalty-service-helpers/member-count.html
+                 if file was viewed before and saved since, reload the file in the browser
+</textarea>
+<br><br>
+
+<input id="scanData" type="button" value="Scan to find number of members" onclick="scanData();" />
+<br><br>
+
+<textarea readonly id= "textarea" style="width:400px; height:800px"></textarea>
+<textarea readonly id= "count" style="width:400px; height:800px"></textarea>
+
+</body>
+</html>
