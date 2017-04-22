@@ -1,0 +1,171 @@
+<!doctype html>
+<html ng-app="dynamoDbScanApp">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src = "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src = "https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap.min.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+
+  <script>
+    AWS.config.update({
+      region: "eu-west-1",
+      endpoint: 'https://dynamodb.eu-west-1.amazonaws.com',
+
+      /////////////////////////////
+      // SETUP OF AWS AUTHENTICATION
+      /////////////////////////////
+
+      // AWS photobox account
+      accessKeyId: "",
+      secretAccessKey: ""
+    });
+
+    var docClient = new AWS.DynamoDB.DocumentClient();
+  </script>
+
+</head>
+<body>
+
+
+  <div class="container">
+
+    <div ng-app="dynamoDbScanApp" ng-controller="dynamoDbScan">
+
+      <textarea readonly style="width:1000px; height:230px; background: #FFFDDE;">
+
+         PURPOSE:         
+               queries nectar-service dynamoDB order table to find the number of created orders/members within a particular period of time
+
+         REQUIREMENTS:    
+               * AWS authentication needs to be provided within this file
+               * dates search criteria need to be in the form: yyyy-mm-ddThh:MM:ss
+
+         NOTE:
+               it is possible to see more what is going on in the javascript console 
+      </textarea>
+      <br />
+
+      <form novalidate class="simple-form">
+
+          <div class="form-group">
+              <label for="namespace">Namespace</label>
+              <input type="text" required class="form-control" id="namespace" ng-model="search.namespace" value="namespace1"/>
+          </div>
+
+          <div class="form-group">
+              <label for="start_date">Start date</label>
+              <input type="datetime" required class="form-control" id="start_date" class="date_field" ng-model="search.startDate" value="yyyy-mm-ddThh:MM:ss" />
+          </div>
+
+          <div class="form-group">
+              <label for="end_date">End date</label>
+              <input type="datetime" required class="form-control" id="end_date" class="date_field" ng-model="search.endDate"value="yyyy-mm-ddThh:MM:ss" />
+          </div>
+
+          <div class="form-group">
+              <label>Table</label>
+              <label class="form-control"><input type="radio" ng-model="search.dbTable" value="order" />  order</label>
+              <label class="form-control"><input type="radio" ng-model="search.dbTable" value="member" />  member</label>
+          </label>
+          </div>
+
+          <div class="form-group">
+              <input type="button" class="form-control btn-primary" ng-click="reset()" value="Reset" />
+              <input type="submit" class="form-control btn-warning" ng-click="scanDatabase(search)" value="Search" />
+          </div>
+
+          <div style="padding: 20px; border: 5px;">
+            <div class="form-group">
+              <h4 ng-model="count" id="count" style="color:green"></h4>
+              <h4 ng-model="error" id="error" style="color:red"></h4>
+            </div>
+          </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+     var mainApp = angular.module("dynamoDbScanApp", ['ui.bootstrap']);
+
+     mainApp.controller('dynamoDbScan', ['$scope', function($scope) {
+
+        $scope.search = {
+            namespace: "namespace1",
+            dbTable: "order"
+        };
+
+        $scope.reset = function(){
+           $scope.search = {
+            namespace: "photobox",
+            startDate: "2017-03-31T00:00:00",
+            endDate: "2017-03-31T23:59:59",
+            dbTable: "order",
+          };
+
+          document.getElementById('count').innerHTML = "";
+          document.getElementById('error').innerHTML = "";
+        };        
+
+        $scope.scanDatabase = function(search) {
+
+          var dbTable = "loyalty-service-" + search.dbTable + "-production";
+          var dateField = (search.dbTable === "order") ? "createDate" : "date";
+
+          var params = {
+              TableName: dbTable,
+              FilterExpression: "namespace = :namespace and #dt between :start_create_date and :end_create_date",
+              ExpressionAttributeNames: {
+                  "#dt": dateField,
+              },
+              ExpressionAttributeValues: {
+                  ":namespace": search.namespace,
+                  ":start_create_date": search.startDate,
+                  ":end_create_date": search.endDate
+              }
+          };
+
+          var count = 0;
+          docClient.scan(params, onScan);
+
+          function onScan(err, data) {
+              if (err) {
+                  let error = "ERROR: Unable to scan the table: " + "\n" + JSON.stringify(err, undefined, 2) + "\n";
+                  console.log(error);
+
+                  document.getElementById('count').innerHTML = "";
+                  document.getElementById('error').innerHTML = error;
+
+                  return error;
+
+              } else {
+                  console.log("Scanning for more ...");
+
+                  count = count + data.Count;
+                  console.log("currently count = " + count);
+
+                  // Continue scanning if we have more orders (per scan 1MB limitation)
+                  if (data.LastEvaluatedKey) {
+                    params.ExclusiveStartKey = data.LastEvaluatedKey;
+                    docClient.scan(params, onScan);
+
+                  // Display result
+                  } else {
+                    console.log("Finishing: count=" + count);
+
+                    document.getElementById('error').innerHTML = "";
+                    document.getElementById('count').innerHTML = `Number of ${search.dbTable} records is ${count}\n`;
+                    return count;
+                  }         
+              }
+          }
+        };
+            
+     }]);
+  </script>
+
+</body>
+</html>
