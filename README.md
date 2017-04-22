@@ -1,7 +1,7 @@
 # dynamodb-count
 Several implementations for quick retrieval of dynamoDB record count.
 
-# REQUIREMENT
+# REQUIREMENTS
 
 * Painless retrieval of the number of records in a dynamoDB table for given search criteria.
 * The tool should be easy to use on different platforms without the need for long setup.
