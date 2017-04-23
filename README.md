@@ -14,6 +14,10 @@ DynamoDB scan retrieves all table records and filters them according to search c
 
 # IMPLEMENTATION
 
+The plan was to provide an implementation in the form of one file, that could be downloaded and, after setting up the AWS credentials, could be used as is.
+
+Originally I was going to use Go and build the relevant binary for my colleague's OS. However Go was not a supported programming language in our company, so I opted for Javascript, with the plan to add a Go implementation after I provide my colleague with the tool he needed.
+
 ## Javascript
 
 * AWS javascript aws-sdk library provided the javascript client to connect and do the search of the table
