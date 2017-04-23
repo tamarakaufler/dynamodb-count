@@ -3,8 +3,8 @@ Several implementations for quick retrieval of dynamoDB record count.
 
 # REQUIREMENTS
 
-* Painless retrieval of the number of records in a dynamoDB table for given search criteria.
-* The tool should be easy to use on different platforms without the need for long setup.
+* Painless retrieval of the number of records in a dynamoDB table for given search criteria. (Finding the count on the AWS DynamoDB dashboard is time consuming if there are many found records, because AWS shows batches of results and the count is found only on the last results page.)
+* The tool needs to be easy to use on different platforms without the need for a long setup. (The app implemented on a Linux machine but my colleague, who was to use the app, uses a Windows machine and is not a developer.)
 
 # BACKGROUND
 
