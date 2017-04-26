@@ -100,7 +100,7 @@
 
         $scope.reset = function(){
            $scope.search = {
-            namespace: "photobox",
+            namespace: "namespace1",
             startDate: "2017-03-31T00:00:00",
             endDate: "2017-03-31T23:59:59",
             dbTable: "order",
@@ -112,7 +112,7 @@
 
         $scope.scanDatabase = function(search) {
 
-          var dbTable = "loyalty-service-" + search.dbTable + "-production";
+          var dbTable = "loyalty-service-" + search.dbTable;
           var dateField = (search.dbTable === "order") ? "createDate" : "date";
 
           var params = {
