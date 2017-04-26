@@ -21,7 +21,7 @@ function scanData() {
     document.getElementById('textarea').innerHTML += "Scanning member table." + "\n";
 
     var params = {
-        TableName: "loyalty-service-member-production",
+        TableName: "loyalty-service-member",
         FilterExpression: "namespace = :namespace and #dt between :start_date and :end_date",
         ExpressionAttributeNames: {
             "#dt": "date",
