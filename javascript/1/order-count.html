@@ -21,7 +21,7 @@ function scanData() {
     document.getElementById('textarea').innerHTML += "Scanning order table." + "\n";
 
     var params = {
-        TableName: "loyalty-service-order-production",
+        TableName: "loyalty-service-order",
         FilterExpression: "namespace = :namespace and createDate between :start_create_date and :end_create_date",
 
         ////////////////////
